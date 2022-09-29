@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Generalization analysis tutorial</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Generalization analysis tutorial</h1>
+
+
+
+<p>The following tutorial shows how to use the NeuroDecodeR (NDR)
+package to conduct a generalization analysis which can test whether a
+population of neural activity contains information in an
+invariant/abstract representation. In particular, we will use the
+Zhang-Desimone 7 object dataset to examine how invariant neural
+representations in the Inferior Temporal cortex are to changes in the
+position of stimuli. This tutorial assumes that one is already familiar
+with the basics of the NDR as covered in the introductory tutorial. The
+NDR is based on the MATLAB Neural Decoding Toolbox, which you can learn
+more about at <a href="http://www.readout.info/">www.readout.info</a>.</p>
+<div id="testing-invariant-neural-representations-using-the-ndr" class="section level3">
+<h3>Testing invariant neural representations using the NDR</h3>
+<p>An important step in solving many complex tasks involves creating
+abstract/invariant representations from widely varying input patterns.
+For example, in order to act appropriately in social settings, it is
+important to be able to recognize individual people. However, the images
+of a particular person that is projected on our retinas can be very
+different due to the fact that the person might be at different
+distances from us, in different lighting conditions, etc. Thus, at some
+level in our brains, there must be a neural representation that has
+abstracted away all the details present in particular images, in order
+to create abstract/invariant representations that are useful for
+behavior.</p>
+<p>A powerful feature of the Neural Decoding Toolbox is that it can be
+used to test whether a particular population of neural activity has
+created representations that are invariant to particular
+transformations. To do such a <em>generalization analysis</em>, one can
+train a classifier under one set of conditions, and then see if the
+classifier can generalize to a new related set of conditions in which a
+particular transformation has been applied. The datasource object
+<code>ds_generalization()</code> is designed for this purpose, and we
+will explain how to use it below.</p>
+</div>
+<div id="using-the-zhang-desimone-7-object-dataset-to-test-position-invariance" class="section level3">
+<h3>Using the Zhang-Desimone 7 object dataset to test position
+invariance</h3>
+<p>In this tutorial, we will use the <a href="datasets.html">Zhang-Desimone 7 object dataset</a> to test how
+invariant neural representations in Inferior Temporal (IT) cortex are to
+changes in the retinal position of objects. The Zhang-Desimone 7 object
+dataset consists of neural responses to 7 different objects that were
+shown to a monkey at three different retinal locations. To test how
+invariant neural representations are in IT, we will train the classifier
+with data from one location, and then test the classifier either at the
+same location or at a different location. If the neural representation
+in IT are invariant to position, then training and testing a classifier
+at different locations should yield an equal level of performance as
+training and testing a classifier at the same location.</p>
+<p>To start let us by loading some libraries we will use in this
+tutorial</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(NeuroDecodeR)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span></code></pre></div>
+</div>
+<div id="binning-the-data" class="section level3">
+<h3>Binning the data</h3>
+<p>For this tutorial, we will use binned-format data that consists of
+the firing rate in a 400 ms window that starts 100 ms after the onset of
+the stimulus. The following code shows how to create this binned data
+using a small subset of the Zhang-Desimone 7 object data (later in the
+tutorial we will load binned data from a larger set of neurons for
+subsequent analyses to get better decoding results). For more
+information about binning the data, see the <a href="introduction_tutorial.html">introduction tutorial</a>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>raster_dir_name <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="at">package =</span> <span class="st">&quot;NeuroDecodeR&quot;</span>), </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                             <span class="st">&quot;Zhang_Desimone_7object_raster_data_small_rda&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>bin_width <span class="ot">&lt;-</span> <span class="dv">400</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>step_size <span class="ot">&lt;-</span> <span class="dv">400</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>start_time <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>end_time <span class="ot">&lt;-</span> <span class="dv">500</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>save_dir_name <span class="ot">&lt;-</span> <span class="fu">tempdir</span>()</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Note: this code might run quicker if more parallel cores are used</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>binned_file_name <span class="ot">&lt;-</span> <span class="fu">create_binned_data</span>(raster_dir_name, <span class="fu">file.path</span>(save_dir_name, <span class="st">&quot;ZD&quot;</span>), </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                                       bin_width, step_size, start_time, end_time, </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">num_parallel_cores =</span> <span class="dv">2</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># The name of a binned file that has data from more neurons in it that will be</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># used for subsequent analyses. This raster data went into this binned format</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co"># data was excluded from the NeuroDecodeR package to keep the package size small.</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>binned_file_name <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="fu">file.path</span>(<span class="st">&quot;extdata&quot;</span>, </span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>                                          <span class="st">&quot;ZD_400bins_400sampled_start100_end500.Rda&quot;</span>),</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>                                <span class="at">package=</span><span class="st">&quot;NeuroDecodeR&quot;</span>)</span></code></pre></div>
+</div>
+<div id="creating-a-classifier-and-a-preprocessor" class="section level3">
+<h3>Creating a classifier and a preprocessor</h3>
+<p>Next, we will create a classifier object, a features preprocessor,
+and result metric objects that we will use in our analyses. We will use
+the same classifier, preprocessor and result metrics that were used in
+the basic tutorial.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> <span class="fu">cl_max_correlation</span>()</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>fps <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">fp_zscore</span>())</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>rms <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">rm_main_results</span>(), <span class="fu">rm_confusion_matrix</span>())</span></code></pre></div>
+</div>
+<div id="using-the-ds_generalization-to-train-and-test-at-different-locations" class="section level3">
+<h3>Using the ds_generalization to train and test at different
+locations</h3>
+<p>In order to train with data from particular locations and test with
+data from a different location, we will use the <a href="https://emeyers.github.io/NeuroDecodeR/reference/ds_generalization.html"><code>ds_generalization</code></a>
+datasource. To use this datasource, we need to specify which label
+levels belong to each training class and which label levels belong to
+each test class. We can do by setting the
+<code>train_label_levels</code> and <code>test_label_levels</code>
+arguments to lists with the appropriate values. Each entry in these
+lists corresponds to the label levels for one class. For example, if we
+create a list
+<code>train_levels[[1]] &lt;- c(&#39;car_upper&#39;, &#39;car_middle&#39;)</code>, and
+<code>test_levels[[1]] = list(&#39;car_lower&#39;)</code>, this means that the
+first class will be trained with data from trials when the car was shown
+in the upper and middle positions, and the first class will have test
+data from trials in which cars where shown in the lower position.</p>
+<p>To create training data for each object identity at upper and middle
+locations, and test data for each object at lower location, we can use
+the code below.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>id_base_levels <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;hand&quot;</span>, <span class="st">&quot;flower&quot;</span>, <span class="st">&quot;guitar&quot;</span>, <span class="st">&quot;face&quot;</span>, <span class="st">&quot;kiwi&quot;</span>, <span class="st">&quot;couch&quot;</span>,  <span class="st">&quot;car&quot;</span>)   </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>train_levels <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>test_levels <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(id_base_levels)){</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  train_levels[[i]] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">paste</span>(id_base_levels[i], <span class="st">&quot;upper&quot;</span>,<span class="at">sep =</span> <span class="st">&#39;_&#39;</span>), </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                              <span class="fu">paste</span>(id_base_levels[i], <span class="st">&quot;middle&quot;</span>,<span class="at">sep =</span> <span class="st">&#39;_&#39;</span>))</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  test_levels[[i]] <span class="ot">&lt;-</span> <span class="fu">paste</span>(id_base_levels[i], <span class="st">&quot;lower&quot;</span>,<span class="at">sep =</span> <span class="st">&#39;_&#39;</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>ds <span class="ot">&lt;-</span> <span class="fu">ds_generalization</span>(binned_file_name, <span class="st">&#39;combined_ID_position&#39;</span>, <span class="at">num_cv_splits =</span> <span class="dv">18</span>,  </span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                       <span class="at">train_label_levels =</span> train_levels, <span class="at">test_label_levels =</span> test_levels)</span></code></pre></div>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<p>Now that we have created this <code>ds_generalization</code> data
+source, we can create a cross-validator as we did in the basic tutorial
+and get the results for training at upper and middle locations and
+testing at a lower location. We are only using 2 resample runs here to
+speed up the computation, but we recommend using a higher number for
+this argument to get smoother results (for example, using the default
+value of <code>num_resample_runs = 50</code>).</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create the cross-validator</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>cv <span class="ot">&lt;-</span> <span class="fu">cv_standard</span>(<span class="at">datasource =</span> ds, </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">classifier =</span> cl, </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">feature_preprocessors =</span> fps, </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">result_metrics =</span> rms, </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">num_resample_runs =</span> <span class="dv">2</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># run the decoding analysis (and time how long it takes to run)</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>DECODING_RESULTS <span class="ot">&lt;-</span> <span class="fu">run_decoding</span>(cv)</span></code></pre></div>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%</code></pre>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tictoc<span class="sc">::</span><span class="fu">toc</span>()</span></code></pre></div>
+<pre><code>## 7.385 sec elapsed</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># show the zero-one loss decoding accuracy (chance is 1/7)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>DECODING_RESULTS<span class="sc">$</span>rm_main_results<span class="sc">$</span>zero_one_loss</span></code></pre></div>
+<pre><code>## [1] 0.8373016</code></pre>
+</div>
+<div id="training-and-testing-at-all-locations" class="section level3">
+<h3>Training and testing at all locations</h3>
+<p>We will now create a full set of 9 results that are based on training
+at <strong>one</strong> of the three locations and testing a different
+locations. This can be done by creating two loops, one for each training
+location, and one for each test location, and by creating a new
+datasource each iteration.</p>
+<p>It should be noted that the <code>ds_generalization</code> is built
+in such a way that if a particular original label is mapped to the same
+training and test class (e.g., if
+<code>training_levels[[1]] &lt;- list(&#39;car_upper&#39;)</code> and
+<code>test_levels[[1]] &lt;- list(&#39;car_upper&#39;)</code>, the data used in
+the training set will still come from different trials than the data
+used for the test set. Thus, the cross-validation splits will still be
+valid because there will not be any of the same data in the training and
+test sets (if this mapping was done for all classes, one would end up
+getting the same results as using the <code>ds_basic</code> datasource).
+Because there is no ‘data leakage’, the following code allows for fair
+comparisons between results where the classifier was trained and tested
+with data from the same location vs. where the classifier was trained
+and tested with data from different locations.</p>
+<p>Note that the code below will take several minutes to run.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>results_dir_name <span class="ot">&lt;-</span> <span class="fu">trimws</span>(<span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">&quot;position_invariance_results&quot;</span>, <span class="st">&quot; &quot;</span>))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># If this code has been run before, delete any results that have been saved </span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(results_dir_name)){</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  the_files <span class="ot">&lt;-</span> <span class="fu">paste0</span>(results_dir_name, <span class="fu">list.files</span>(results_dir_name))</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">file.remove</span>(the_files)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">file.remove</span>(results_dir_name)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>} </span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(results_dir_name)</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>id_base_levels <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;hand&quot;</span>, <span class="st">&quot;flower&quot;</span>, <span class="st">&quot;guitar&quot;</span>, <span class="st">&quot;face&quot;</span>, <span class="st">&quot;kiwi&quot;</span>, <span class="st">&quot;couch&quot;</span>,  <span class="st">&quot;car&quot;</span>)   </span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>pos_base_levels <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;upper&quot;</span>, <span class="st">&quot;middle&quot;</span>, <span class="st">&quot;lower&quot;</span>)</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co"># loop over all training and test position permutations</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (iTrainPos <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>) {</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (iTestPos <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>) { </span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># create the training and test label levels</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    train_levels <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    test_levels <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (iID <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">7</span>) {</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>        train_levels[[iID]] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">paste</span>(id_base_levels[iID], pos_base_levels[iTrainPos], <span class="at">sep =</span> <span class="st">&#39;_&#39;</span>))</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>        test_levels[[iID]] <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">paste</span>(id_base_levels[iID], pos_base_levels[iTestPos], <span class="at">sep =</span> <span class="st">&#39;_&#39;</span>))</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># create the ds_generalization data source</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>    ds <span class="ot">&lt;-</span> <span class="fu">ds_generalization</span>(binned_file_name, <span class="st">&#39;combined_ID_position&#39;</span>, <span class="at">num_cv_splits =</span> <span class="dv">18</span>,  </span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>                       <span class="at">train_label_levels =</span> train_levels, <span class="at">test_label_levels =</span> test_levels)</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># create the cross-validator</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>    cv <span class="ot">&lt;-</span> <span class="fu">cv_standard</span>(<span class="at">datasource =</span> ds, </span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>                  <span class="at">classifier =</span> cl, </span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>                  <span class="at">feature_preprocessors =</span> fps, </span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>                  <span class="at">result_metrics =</span> rms, </span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>                  <span class="at">num_resample_runs =</span> <span class="dv">2</span>)</span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># run the decoding analysis (and time how long it takes to run</span></span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>    tictoc<span class="sc">::</span><span class="fu">tic</span>()</span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>    DECODING_RESULTS <span class="ot">&lt;-</span> <span class="fu">run_decoding</span>(cv)</span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a>    tictoc<span class="sc">::</span><span class="fu">toc</span>()</span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a>    <span class="co"># create a name for the saved results</span></span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a>    result_name <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;train &quot;</span>, pos_base_levels[iTrainPos], <span class="st">&quot;test&quot;</span>, pos_base_levels[iTestPos])</span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a>    <span class="co"># save the results</span></span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">log_save_results</span>(DECODING_RESULTS, results_dir_name, result_name)</span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%6.334 sec elapsed</code></pre>
+<pre><code>## Warning in log_save_results(DECODING_RESULTS, results_dir_name, result_name): The manifest file does not exist.
+##   Assuming this is the first result that is saved and creating manifest file</code></pre>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%7.337 sec elapsed</code></pre>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%7.023 sec elapsed</code></pre>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%7.02 sec elapsed</code></pre>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%6.8 sec elapsed</code></pre>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%7.171 sec elapsed</code></pre>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%7.241 sec elapsed</code></pre>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%7.085 sec elapsed</code></pre>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<pre><code>## 
+  |                                                                            
+  |                                                                      |   0%
+  |                                                                            
+  |===================================                                   |  50%
+  |                                                                            
+  |======================================================================| 100%7.303 sec elapsed</code></pre>
+</div>
+<div id="plotting-the-results" class="section level3">
+<h3>Plotting the results</h3>
+<p>To plot all these results, we will create some custom code. This code
+loads the results for each training and test location pair using the
+<code>log_load_results_from_result_name</code> function and save the
+results to a data frame. This data frame is then plotted using
+<code>ggplot2</code>.</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># compile all the results that were saved</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>all_results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>()</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (iTrainPos <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>) {</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (iTestPos <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>) { </span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># get the name of the result and load them </span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    result_name <span class="ot">&lt;-</span> <span class="fu">paste</span>(<span class="st">&quot;train &quot;</span>, pos_base_levels[iTrainPos], <span class="st">&quot;test&quot;</span>, pos_base_levels[iTestPos])</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    DECODING_RESULTS <span class="ot">&lt;-</span> <span class="fu">log_load_results_from_result_name</span>(result_name, results_dir_name)</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    curr_results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">decoding_accuracy =</span> <span class="dv">100</span> <span class="sc">*</span> DECODING_RESULTS<span class="sc">$</span>rm_main_results<span class="sc">$</span>zero_one_loss,</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">train_location =</span> <span class="fu">paste</span>(<span class="st">&quot;Train&quot;</span>, pos_base_levels[iTrainPos]),</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>                                        <span class="at">test_location =</span> pos_base_levels[iTestPos])</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>    all_results <span class="ot">&lt;-</span> <span class="fu">rbind</span>(all_results, curr_results)</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the results</span></span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a>all_results <span class="sc">|&gt;</span></span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(test_location, decoding_accuracy)) <span class="sc">+</span> </span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">&quot;blue&quot;</span>) <span class="sc">+</span> </span>
+<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">1</span><span class="sc">/</span><span class="dv">7</span> <span class="sc">*</span> <span class="dv">100</span>) <span class="sc">+</span> </span>
+<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>train_location) <span class="sc">+</span> </span>
+<span id="cb32-31"><a href="#cb32-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">&quot;Decoding Accuracy&quot;</span>) <span class="sc">+</span> </span>
+<span id="cb32-32"><a href="#cb32-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">&quot;Test location&quot;</span>)  </span></code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAIAAACb4TnXAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAgAElEQVR4nO3deVgT1/o48JM9QAICYRMRgoqiAtqqX0UFbLkqNdZ9xwVRubXu5bpVRKuC4lWEulGRqq2Vtu5FbS1VUdEqonVDFNlFkH0NWUjm98dc8+QHyRBJJibx/Tz+MTmZvOeckNfZzpyhYBiGAADkoL7vBgBgyiDBACARJBgAJIIEA4BEkGAAkAgSDAAS0d93A/6ntLT0fTeBLE5OTirLTbjLFhYWlpaWbctNuMssFsvGxqZtuaEkWENDw/tuAlnUJZgJd5nBYKgsN+Euq7ueDLuIAJAIEgwAEkGCAUAiSDAASAQJBgCJIMEAIJGhnKZXJpFIRo0a1bb84MGDPXv2JPjglClTdu3a1bVr13ar0HxNUumhp+1SGWrTpk0DBw4cM2aMykKd1G4IfdcDQ0wwJpN58eJFfPmzzz47cOCAq6srQojFYiGEZDIZjUZT+cHQ0FCVF/v0iaB5bRlCT9/Xl2YIfdeGhn9oQ0wwhJCZmZlimcVimZmZCQSCGTNmpKWlcTic3bt3JyQk/PXXX01NTe7u7qtWreLz+Qihw4cP9+7dm8PhCASC4ODgtLS0+vp6Pz+/sLAwdRUVFhbGxsa+fPnSwcFhyZIl/fv3v3Tp0p07dzZt2iSXyz///POxY8eGhYXV1dVNnz79t99+o9PpFRUVe/bsefLkCYfDCQkJCQwMRAi1ap7h9FQgEISFhZ04caK+vj4kJMTHxycqKqq8vDwoKOjLL79UDvXy5cuYmJhXr14NHTpUKpXiH1dZqKDyqzCcvo8YMeLixYt4LRs2bBg2bNjo0aMFAsG0adNu374tFAr9/PxCQkIoFIrKQp38oQ00wVTKz88/ePAglUpFCHXr1m3GjBkWFhbHjx+Pjo7+7rvvWq1cVFS0b98+sVgcEhLi7+/fq1evtgFlMtnXX38tEAh27dp1586dDRs2/PDDD97e3omJiQihvLw8S0vLR48eIYQeP37cs2dPOp0ul8u//vrrIUOGbN68ubi4ODw8vHv37m5ubq2aZ1A9vXPnTkJCwuvXr5ctW/bxxx9HR0djGPbFF198+umnipVlMtnGjRsnT548bty4y5cv79q1y9fXV2WhIizBV2E4fVdXBf6pFStWuLu7BwQEtC308/PTyR/amE5yTJgwQdGrwMBAS0tLGo02a9asgoKC5ubmViuPHz+eSqWamZl5eXnl5uaqDJidnd3c3Dx16lQajebr6+vp6Xnr1i1nZ2eEUElJycOHD0eNGlVZWSkSiR4+fOjj44MQysnJqaqqmjdvHp1O5/P5gYGB6enpbZtnUD2dOXMml8vt2bOns7Ozn5+fg4ODo6Ojj4+P8srZ2dkymWzixIk0Gi0oKMjFxUVdoQLBV2E4fVdXBYVCYbPZY8aMuXLlispCXf2hjWkLprznffHixbNnz9bW1lKpVJlMVl9fr7y/gRBSDDZlMplt/zC4yspKOzs7xZfl4OBQVVWFEPLy8nr06NGjR4/Gjx+fn5//7Nmzx48fL1q0CCH05s2bhoaGGTNm4B+RSqWK/SIdHhjotqeKaGw2W3lZeeWqqipHR0fFS3z8pMpCBYKvQhs6/yu3ZW1tragL/4u3LdTVH9qYEoxCoeALhYWF33333bfffuvi4iKXy4OCgjo2dQ+Px6uoqMAwDI9cXl7u6emJEPL29n748GF2dranp2dBQcHff/+dn5/fu3dvhJC9vb2tre2JEycImqc9nfe0XTY2NjU1NYqX+LLKQgWCr0IbOuw7m82WSqV4TiqPMy4tLe3SpQu+YGtrq7JQV39oY9pFVBAKhWZmZp07d0YIXbx4USKRdCxOr1692Gz2r7/+KpPJbt++nZWVhR9jeHt737hxg8fjsdlsHx+flJSUbt26sdlshFCPHj04HM4PP/wgFotlMll2dnZxcbEOu9aKrnraLk9PT6lUev/+fYRQVlbW8+fP1RUqkP1VaN93d3f3u3fvIoSeP3/+9OlTRXlycnJTU1N5efmZM2fwA7C2hbrqnTFtwRQ8PT2HDBkSGhrq6OjYr18/lbceaYJGo23dunXPnj3Hjh2zt7ffvHkzvvV3d3enUCje3t4IIT6fT6PR8AMw/CNRUVF79+6dPn16S0tL9+7dly5dqqt+taWrnraLRqNt3rw5NjaWyWR27tx50KBB6gqVP0LqV6F935cuXRoTE3P69GkXF5f+/fsryn19fRcsWNDc3Dx27NgRI0aoLKRQKDrpHcVA5kV88eLF+24CWTw8PFSWm3CXbWxseDxe23JD6LJAIEhMTFQ+tlRX+E44HA6+sW3FKHcRATAWkGAAkMgoj8EA6LCUlBQNC3UCtmAAkAgSDAASQYIBQCJDOQbTZPgJi8XicrnV1dVyubzDFTEYDCsrq5qaGplM1uEgdDq9U6dOdXV1bQeYa06TLuukIiqVamNj09DQIBaLOxwEIcTj8RobG0UiUbtrthrQpKDhICPNKyJga2vb3NwsFAq1CWJtbS2RSJqamtpdk8lkqiyHLRgAJIIEA4BEkGAAkAgSDAASQYIBQCJIMABIBAkGAIkgwQAgESQYACQylJEcQEt2dipucPz/cRHiqnuvoqJSt+0BOINLMA1+KETDbeCHAgwK7CICQCJIMABIBAkGAIkM7hgMAH3S4JjfDCHVd98gDY75YQsGAIkgwQAgESQYACSCBAOARJBgAJAIEgwAEkGCAUAiSDAASAQJBgCJDOX5YIqJNZlMhjZxJJJ2JuikUCh0Or2lpUWbjr9TEAZDdY80mUtU84rI/t4QQgwGQyaTaTLrq1wuZ7FYbcs1nD5V84q0D6Kr701dlw1lqFRdXd3bxXaHrmgYRzV8Zt+GhgbtZ/ZtamrS5Bej8lF0SIOmvmNF5H5vCCEej9fc3KzhzL4qf22a1PJOFRGwtbUVi8UazOyrm++NyWSq7DLsIgJAIkgwAEgECQYAiSDBACARJBgAJIIEA4BEkGAAkAgSDAASGcqFZt3SYKIFa4L3YHJFoCuwBQOAREQJVlVVpbd2AGCSiBLM2dk5ODj45s2bemsNACaGKMEOHz5cVFQ0fPhwLy+vvXv3ajhSEwCgQJRgs2bNun79elZWVmBgYGRkZOfOnRcsWHDv3j29NQ4AY9f+SQ5PT8/Y2NiSkpLo6Ogffvhh4MCBAwYMOH78uIHcSAaAIdPoNP3NmzcTEhJOnjzZpUuXhQsXlpSULFq06ObNmwcOHCC7fR8CDS4qWBG8BxcVDBlRgtXW1h47diwhISE7OzsoKOjUqVOjR4+mUqkIoSlTpgQFBUGCAUCMKME6d+7M4XDmz59/4cIFNzc35be8vb1dXFzIbRoAxo8owQ4dOjR58mSVN0J36tQpOzubtFaB90ODnVUOQhx178HOaltEJzlGjhxZXV2tXFJaWlpRUUFykwAwHURbsODg4HHjxi1evFhRcubMmd9+++3SpUttV5ZIJJMnT1YuWbRokUAgiIiIePjwIV7C5/Pj4uJ00WwAjANRgmVkZMTGxiqX+Pn5bdy4UeXKTCbzl19+wZerq6sXL178f//3f/jLVatWDR48GCGEnyAB4MNBlGBCoZBCoSiX0Gi0hoYGdeuz2Wx84e+//+7Tp4+dnR3+ksFgKN4C4INClGC9evU6e/asp6enouTs2bMeHh7tBr169er48eMVL5OSkpKSklxdXWfPns3n8/HChoaGI0eO4Msff/xx//79O9D6tiwsLPQQBN8Us9lsJpNJXi36jKPbIK3+X+5ALSwWi0ajadkeBoOhqy9ZnXbjEyXY8uXLw8LCqqqqRo0ahWHY5cuX4+PjExISiCPm5eWVlZX5+vriL8eOHcvj8RgMRmpq6oYNG/bv329lZYUQEolEqamp+DpWVlaK/UktafOL1zwI/gNiMBjaDGfRSVN1FUe3QdRN6qp5LTQaTcsDCgqFon2QdrXb5Xamzo6Njd2yZUtNTQ1CyNraeuPGjStWrCCuMjExsb6+ftWqVW3fWrJkybRp04YPH972rcrK/53h1eBMMRH8TLFOghDAJ9ytq6vTZmZfA+yyrr43MzMzlf+1K7pMjMfjNTY2aj+zb3Nzc7sz++qqy0wm09LSsu0K7QyVWrly5dKlS/Py8igUiru7e7tbbZlMdv369ZUrV6p8l06nazNhNQBGp/2xiHQ6XZPjLtyDBw+oVGq/fv3wl83Nzffu3evbty+VSk1NTS0tLfX29u54YwEwNu0k2JMnT3755ZeCggKJRKIoTE5OVrf+lStXAgICFMe4GIZduHBh3759crmcz+dHRkba2NjopN0AGAWiBEtJSZkwYYKvr+/du3f9/f1fvHhRXFysfHqwrdWrVyu/NDc33759u25aCoARIjrHsnnz5sjIyLS0NCsrqyNHjuTk5CxbtqxHjx56axwAxo5oC5adnX38+HGEEI1GE4lENBpt+/btnp6eUVFR+mre+wS3aQHtEW3BmEwm/oBAe3v7oqIihBCdTm9qatJT0wAwfkQJ5uXl9c8//yCEhg8fvnnz5qtXr/7nP//p3LmzvtoGgNEj2kVcu3YtPvJw3bp1AoHgk08+sbOzO3XqlL7aBoDRI0qwgIAA/G5LJyenzMzM6urqTp06wYh4ADSnNlvEYjGHw1E+4rKxsYHsAuCdqE0YFovl4OCgblg0AEATRFuk4ODgqKgomP8QgA4jOgbLy8s7d+5ccnJy3759zczMFOUEQ6UAAMqIEgzDsM8//xxfbmlp0Ut7ADApRAl28uRJvbUDgHelwVAbc4TM1b2nn6E2cFYQABIRbcHUzVSj5a2mAHw4iBIsMTFRsSyTyZ49e5aYmLhmzRryWwWAiWhn4tFWJaNHj/7222/JbA8AJuXdjsECAgLgibIAaO7dEiw7O1v72eoA+HAQ7SK2mqGtsrIyJSUlLCyM5CYBYDqIEgy/GQxHpVLt7e1jY2PnzJlDRjs4HLUPxdF/HP0EMeEuqxvCqljBzKzdqdSJnpPU3KyD89j6+d6IEuzatWvat0BDzc3Nbxe1msX+bRzDCaL2aocJd1nlM+WQSXeZTqer/EMTJVhFRUVLS4uTk5OipLS0lE6nK57qoEO6mpBUJ3H0E8SEu6xugLgJd1nduYl2RtOfOXNGueTMmTMk7SICYJKIEiwjIyMgIEC5xM/PLyMjg9wWAWBCiBLsXZ8PBgBohSjB8OeDKZdo+HwwAABO988HAwAoECVYSEhIbW3tli1bdu3ahRCytraOiYkJCQnRV9sAMHo6fj4YAECZRtfBFMdd5F0HA8AkwXUwAEgE18EAIBFcBwOARHAdDAASwXUwAEgE18EAIBFcBwOARO3PyUGn0z08PPBnn587dy4oKIj8VgFgIjSa9Ob169fffPONm5vbhAkT4CwiAJojSjAMw/78889Jkya5urpGRkbOmTOnsLAQpm0DQHOqE6yqquq///2vh4fHlClT7Ozs0tPTaTTajBkzXFxc9Nw+AIya6pMcLi4uvr6+mzZtmjRpkro5W9qKiIh4+PAhvszn8+Pi4hBCjY2N8fHx9+/ft7a2Dg0NHTx4sE7aDYBRUJ1gdDpdLBaLxeJ3fSzYqlWr8BRSPM350KFDcrn82LFjWVlZMTEx+/btg7HC4MOhehexpKRk5syZe/bscXR0DAkJuXHjhobhGAwGm81ms9lMJhMhJJVK09PTZ86caW5uPmDAAE9PT81DAWACVG/BuFzuF1988cUXX6Snpx84cOBf//qXTCZLSkoKCwvr2bMnQbikpKSkpCRXV9fZs2fz+fyysjKpVOrm5oa/6+bmVlRUhC+LRCLF+RI3NzcHBwed9EfdjHwGGEQntegqjm6DKPZfyKhFV3H002WEaaCioiImJqZbt24IoX79+qlb7c6dO7m5uUVFRUlJSTNnzqytrX3x4sWUKVMUKyQnJ0dHR+PLpaWlH78VHx+vWAchrf4ZWhBNGE5rddVliUTyoXVZKpWq7Gk7IzlwPB7vP//5T3h4+OXLlw8cOKButUGDBuELISEhmZmZjx49cnNzE4vFcrkcz2+hUKg4ZWJvb3/lyhXFfwNVVVVvw9hq0iR13sYxnCDI1lZ1HBPuMpvNZjAYBCsYUmt102Umk8nlctuu8A5PV6FQKKNGjWo1vl4dOp0uk8kcHR0ZDEZBQQFeWFhY2LVr1/9VTKVavsVisZT+b9OKoQUhiANd1rIiwwlCEEpnz2hubm6+ceNGTU1NXV3dqVOnSktLvb29GQyGr69vcnKyUCjMzMzMysoaPny4rmoEwPBptIuoCQzDLly4sG/fPrlczufzIyMjbWxsEEKLFi2Ki4ubM2dOp06dVq5cCefowQdFZwlmbm6+ffv2tuUcDufrr7/WVS0AGBed7SICANqCBAOAREQJRm+DwWBwudwBAwYkJibqrYkAGC+iY7C4uLiNGzcKBIIhQ4ZQKJRbt26lpKSsXbu2oKDgyy+/ZLFYs2fP1ltDATBG7TxCdvPmzUuWLMFfhoWF7d27Ny0t7ddff/X09Ny9ezckGADEiHYRL126NGbMGOWSMWPGXLp0CSEkEAhycnLIbRoAxo8owVgsVmZmpnLJvXv38LFOcrkcHy8PACBAtIs4d+7chQsX5ufnDx06FMOwW7duRUVF4dO2Xb9+3dPTU1+NBMBYESXYjh07OBzOli1b8IluuFzuihUrIiIiEELDhw/38/PTUxsBMFpECcZgML755ptNmzYVFxcjhFxcXBQ3veC3rgAAiLU/VIpKpdrZ2cnlcqFQiJdwOBySWwWAiSA6yVFSUjJx4kRLS0sLCwuuEr01DgBjR7QFW7hwYX19/cGDB+3t7fXWIABMCVGCpaenFxYWdurUSW+tAcDEEO0iWlpaaj4pIgCgLaIECw0NxR9cBADoGKJdxGfPnp09ezY5OblXr17KDy5KTk4mv2EAmAKiBJPJZGPHjkUIYRj2rlP8AgAQcYKdPHlSb+0AwCTpbE4OLenqbIpO4ugniAl3Wd00tx9gl1UkmEAgCAwMXLFihUAgUPmZlJQU7VvWivYz1Okwjn6CQJfJq0j/QdRFU5FgPB4PHwzF4/G0b4GGxGLx20WtRoq8jWM4QZC6sS8m3GV1/52bcJfV3b2lIsGOHDnSagEA0DEwqxQAJFKxBaPT2znzAafsAdCQilz68ccf8YXKysqIiIiRI0f6+fmxWKz79+//+OOP69at028LATBiKhJs+vTp+MLEiRMjIiJWrVqleGvKlCkxMTGQYwBoiOgY7I8//pgwYYJyyYgRIx4/fkxykwAwHUQJZmZmdvfuXeWSnJwciURCcpMAMB1E5zNCQkIWLVr08uXL4cOHs1isBw8eREdH47NKAQA0QZRg0dHRHA4nJiZmw4YNCCFLS8vw8PD169frq20AGD2iBKPT6ZGRkREREcXFxRQKpUuXLmofpQ4AUEWjWaXwZyhDdgHwrohyBsOwPXv28Hg8Jyenzp0783i8+Ph4XY3XBOBDQLQF27lzZ2Rk5PLly/39/RFCaWlpa9askUgk4eHh+moeAMaNKMEOHjwYFxe3aNEi/GVQUJC7u/uOHTsgwQDQENEuYnFx8YgRI5RLRowYgU+jDQDQBFGCOTs737hxQ7nkxo0bzs7OJDcJANPRzsy+S5cuLSgo8Pf3xzDs+vXru3btwp+uAgDQBFGCrVu3jkajbd++fcuWLQghKyurTZs2wQEYAJojSjAqlbp27do1a9YoLjRTKBS9tQwAE0CUYBUVFS0tLU5OTl27dsVLSktL6XS6nZ1d25UlEsmhQ4cePHhQV1fn6uo6f/783r17I4QiIiIePnyIr8Pn8+Pi4nTdBQAMF1GCBQcHjxs3bvHixYqSM2fO/Pbbb/hz0FtpaWkxMzNbv369nZ3dxYsXt2zZkpSUZGZmhhBatWrV4MGDkfq5UAAwVUS/+IyMjICAAOUSPz+/jIwMlSubm5vPnz/f3d2dy+VOnTpVIpGUlJTgbzEYDDabzWaz4bnp4ENDtAUTCoWtDrpoNBr+vGZi+fn5FAqlc+fO+MukpKSkpCRXV9fZs2fz+Xy8UCqVvnz5El+2tbXVVe61O6GI4QTRSS26iqPbIOqO1U24y2r3zjD1fHx8oqKilEuioqL69u1L8BEMw5qampYsWXLmzBn85Z07d3Jzc4uKipKSkmbOnFlbW4uXl5aWfvwWPsQRh5BW/wwtiCYMp7W66rJEIvnQuiyVSlX2lCiJly9fHhYWVlVVNWrUKAzDLl++HB8fn5CQQPARiUSybdu23r17jx8/Hi8ZNGgQvhASEpKZmfno0aPhw4cjhGxsbPbv34+/5eTkVFdX9zaGlUb/dajxNo7hBEFWVqrjmHCXmUwmg8EgWMGQWqubLtPpdJWbxHbuaK6trd2yZQv+lDBra+uYmBiCO5pbWlqio6NtbW3//e9/q1yBTqfLZDJ8mclkKnIPIVRZWdleXzQilUqNJYhOatFVHN0GUbf3ZcJdVrtXTPz5lStXLl26NC8vj0KhuLu7Kz8lrBW5XL5z504KhbJ48WK8VgaDIRKJ7t2717dvXyqVmpqaWlpa6u3t3dG+AGB82j/Oq6qqqqioGDp0KPFqb968uX37NkJo6tSpeElERESfPn0uXLiwb98+uVzO5/MjIyNtbGy0bzQAxoIowRoaGubNm3f69GmE/vfwiODg4B49ekRGRrZd2cnJ6fz5823Lt2/frqOmAmB8iK6Dbdiwoaio6P79+4qSCRMmqMwiAIBKRFuws2fP/vTTT/3791eU9OnTJzc3l/xWAWAiiLZgZWVliovFOLFYrPSIJwBAO4gSzMPD486dO8olycnJXl5eJDcJANNBtIv41VdfLVu2TCgUIoR+//33M2fOHDp06KefftJX2wAwekQJNm/evIaGhtWrVyOEgoKCrK2t4+LiFM9eAQC0q53rYEuXLl28eHF+fr5MJuvWrZuuBmsC8IEgShixWHzz5s3c3FwKhdK9e3fFQHgAgIbUJlhqaurcuXNfv36tKOnSpcuxY8daTeQGACCg+ixifn7+uHHj3Nzczp8/n5+fn5eXd/bsWWdn57FjxxYWFuq5iQAYL9VbsL179/bo0ePatWuKmw74fP7o0aMHDhy4d+/enTt36rGFABgx1VuwK1euLFmypNUtPSwWa8mSJVeuXNFLwwAwBaoTLC8vz8fHp215v379YKgUAJpTnWCNjY1cLrdtOZfL1WRODgAATnWCyeVyleUUCkXdWwCAttSepg8ICGh7WbmlpYWMRhQUFGRmZr59pdUcCWlpOphoQadB0JAhQ1qNmUYIVVRUXL9+/e0rw2mtbrrco0ePtreuNzU1paWlvX1lOK3VTZednJx8fX3brkDBVD2xcsWKFQRB9+zZo02b2tqxY8fatWt1G9NwHD58eP78+a0Kz507p5gXyPSsXLly9+7drQqzs7M9PT3fS3v0YMyYMSkpKW3LVSeYnpWVlT19+hRfDgzspE2o1NRagwqCEPLx8eHxeK3era2tVWy0Dae1uupy165de/To0epdkUiUnp6OLxtOa3XVZR6Pp/K8oEEkGFKaVcrOrvVv8Z1UVFQaVBCEUNvswplwl83MzCwsLNquYMJdZjKZlpaWbVcwlMG7JjznK6m16CoOzOyrZRB1M/saSoKpnKfyfcXRTxAT7rK6X5sJd7mD8yLqTXNz89tFFbsW7x7HcIIglTtLyKS7jD9Vh2AFQ2qtbrqs7uEK8DwhAEgECQYAiSDBACARJBgAJIIEA4BEkGAAkAgSDAASQYIBQCJIMABIBAkGAIkgwQAgESQYACSCBAOARJBgAJAIEgwAEkGCAUAiSDAASAQJBgCJIMEAIBHpc3I0NjbGx8ffv3/f2to6NDR08ODBZNcIgOEgfQt26NAhuVx+7NixsLCw3bt3V1RUkF0jAIaD3ASTSqXp6ekzZ840NzcfMGCAp6fnjRs3SK0RAINCboKVlZVJpVI3Nzf8pZubW1FREak1AmBQyD0GE4lELBZLMQ2lubn5mzdv8OWysjKBQIAvz507d+nSpTqpUd081QYYRCe16CqOboNIpVLyatFVHN0GUffgIXITjM1mi8ViuVyO55hQKGSz2fhblpaW69evx5c9PDwaGxvxZYLn+9HpdDab3dTURDCfPh6GIAiNRjMzMxMKhQQPOms3CJVKNTc3b25ulslkxEEQQhwOR80K7XdZ84oIglAoFAsLC5FIRPD0qXaDIIQ4HI5YLFaXPEipyzQaTeW8uZp0WfOKiINYWFhIpVKJRKJNEHNzc5lMJhaLiYMghKhUqsq5uMlNMEdHRwaDUVBQ4O7ujhAqLCxUPDbK3Nx84sSJijUVjwUgwGKxFBnb4SYxGAwzMzOxWEzwk20XnU43NzeXSCQEPwIFdQkmEol0W5E6VCoV/7UR/FA0weFwpFKpJs1WN7OvJp99p4oIWFhYtLS0aBnEzMxMwyDvZ2ZfBoPh6+ubnJwsFAozMzOzsrKGDx9Oao0AGBTST9MvWrQIw7A5c+YcOHBg5cqVdnZ2ZNcIgOEg/UIzh8P5+uuvya4FAMMEQ6UAIBEkGAAkggQDgESQYACQCTMeOTk58fHx+IXmDisuLo6Pj6+qqtImSGVlZXx8fElJiTZB9FZRU1NTfHz8y5cvtQkik8ni4+MfP36sTRB9VpSQkJCRkaFlkKNHj16/fl2bCMa0BSssLDx69KjSY0g7oqys7OjRo7W1tdoEqampOXr0aFlZmTZB9FaRUCg8evRoYWGhNkHkcvnRo0dfvHihTRB9VvTTTz89evRIyyCnT5/OyMjQJoIxJRgARgcSDAASUTD1A2cNTXNzc3V1tZOTk2J4fgeIxeLKykp7e3uVo1E1JJVKy8vL7ezs1I1A0xWdVCSXy0tLS21sbNQNEdQEhmGvX7/u1KmThYVFh4Pos6LXr19zuVwul6tNkDdv3rDZbCsrqw5HMKYEA8DowC4iACR6/wkWEhLy6tUrfQbfvn375cuX1bTSEYsAAAppSURBVBWS2h7ihpEa/L33+gPsMjKEBCOPTCYLDg62trZ+3w1BCCFtbj9714oMpNfQZaSH0fSaKy4u3r9/f35+vr29/YIFC7y9vVNTUzMzM9esWYNh2IwZM0aPHj1v3rz6+vrQ0NATJ07Q6fRp06Y5OjriV3j8/f3HjRsXGxtbVFTk6ekpEok4HE5JSUnPnj0tLCzy8vLi4+Nfv349ePBgxY29rQr37t3r5+eHv7Vt27a+ffs+fvz47t27HA6Hw+Hg97bNnDmTQqFMnz59woQJGRkZzc3NisLKysqDBw8+e/bMwsJi1qxZ/v7+CKHp06dPnjz55s2bHA5n69athtbrW7dueXl54eUHDx4cMWKEj4/PwoUL6XS6XC63tLQMDAyELmvTZUPZgslksq1btw4cOPD48ePBwcHbtm2rra3t06dPVlYWQig/P5/L5T59+hQhlJWV5eHhQafTMQwTi8USieT7778PDw+/du1aYmJiREQEm83OyclZvHixoqsymSw6OjowMPDEiRPe3t6ZmZnqCpWdP3/e3d3d3Ny8Z8+eIpFo1apVmZmZ6enp+LtFRUU7d+7cvXs3Xohh2NatW93d3Y8ePbphw4bDhw8XFxfjaxYUFMTGxqr8qb33XrdqD94LKpU6cODA3bt3t7S03L59G7qsTZcNJcFycnJEItGECRNoNNqgQYM8PDzu3Lnj5OSEEHr9+vXTp08/+eSTqqoqsVj89OnTPn36IIRyc3MxDFu+fLm1tfWwYcO4XK6VlZW9vT2FQvH09CwoKFAOLpPJBAIBjUYLDAzs3LmzukKFpqYmoVA4Y8YMhNCUKVMCAgIePHgwatQoxbRzY8aMoVAoLBYLL8zNza2pqZkxYwadTu/atWtAQMCdO3fwNQUCAYVCMcxet2pPRUVFTU0Ng8EQCASurq4jRoxwdnaGLmvTZUPZRayurra1tVU00d7evrq6GiHUu3fvrKysrKysoKCgoqKi58+fP336dO7cuQihiooKDMNiYmLwy2LKk+Hgc7wogldVVTk4OCheOjo6qixU/G+EEBKLxSKRaOHChc3NzTExMRiG+fv7u7i44K1CCCmujXTq1Km6urqioqKxsXHhwoV4oVQqxXceEEIExwbvvdet1NfXNzY2trS0xMTE0Ol0qVTq4eGhGFYGXe5Alw0lwWxsbPABuPhXX1FR4eHhgRDq06fPkydPnj9/vmLFiuLi4nv37hUVFfXs2RMhhP+dtm/fbm9vjxAKDw8fOXIkHq3V/yU2NjbKgw/r6upUFuLfL/5SJpNZWFgkJiZOnz59+fLl/fv3RwidP3/exsYGX6G8vNzZ2Rkh9ObNGxsbG1tbW2tr68TExLZdU/d/uSH0mkqlKo7LhUIhh8OxtrZubGxU7jK+wwZd7liXDWUXsUePHiwW69y5czKZLCMj4/nz54MGDUII9e7d+/bt27a2tiwWq0+fPn/88Yebmxs+91v37t0pFEpKSopEIpHJZCKRqKqqSmVwDw8PqVT68OFDhNDz589zcnJUFvJ4vPv37yOEioqKCgsLWSzWzz//jBA6derU48ePnzx5kpKSMmzYMDzm6dOnhUJhZWUlXti9e3cOh/Pzzz/jjcnJySkpKTH8Xsvlcnwq2JaWlvz8fAcHB3xGp5MnTzY0NGRkZJw9exa6rE2XDWULRqPRNmzYcODAgeTkZDs7u3Xr1uHbXD6fT6FQ8H1xV1dXOp3et29f/CNUKpXFYr169So0NFQmk8lkMnXz/tFotHXr1u3fv5/JZDo6On700UcqC93d3U+ePFlXV3ft2jUvL6+PP/44OztbKBQ+f/5806ZNTCbzs88+U3z1gwYNWrZsmUgkGjVq1LBhwygUCn7UizfGzc1t0aJFht/rXr16ZWZmhoeHi0SiHj164L1YuHBhTk5OcHAwlUr99NNPoctadVmbe10+BNOmTXvz5o0mhSYDukxQ+K4MZRcRAJMECQYAiWA0PQAkgi0YACSCBAOARJBgJmLevHmK562ZUl3GzlCug5mexsZGgvvV3/XQNzg4uLGx8ezZs1q36521rXrYsGGKJ30BYpBgZDE3N3/w4AG+fO/evYULFx4/frx3797vt1U6sWDBgvfdBOOh5XU0oImrV68ihJTnwTxy5IiXlxeLxXJ1dV22bFl9fT1efuPGjaFDh3K5XAsLiz59+pw6dQrDsNDQUOU/2YEDB9pWMXfu3DFjxuDL+C0hbm5uDAaDz+fv2LFDLpcr1jx27Fi/fv1YLJaNjc3IkSPLy8sxDPv999/9/f1tbW05HM7AgQMvXryIr6yyag3rmjRp0tSpUyMjI11cXKysrMaMGaOHqVoNDSSYPrRKsG+//ZbH4/3444+5ubk3b94cMGDApEmTMAyTSCRWVlbh4eG5ubn5+fkXLlxITU3FPzJr1qxx48YRVKH8o4+OjjY3Nz98+PCLFy8SEhLYbHZsbCz+VlxcHIPBiIqKysrKevToEX4bIoZhP//884kTJ7KysrKzszdt2kSn0588eaKuag3rmjRpEpPJ3LJlS3Nzc01Nja+v78SJE7X+Lo0MJJg+KCdYS0uLra1tYmKi4l18hHFZWVl5eTlC6K+//mobQfMEk8vlVlZWERERirfWrFlja2uLV21tbf3VV1+122A/Pz9FBIIEI6gLw7BJkyb17dtX8dbx48e5XG67VZsYOIuob/n5+VVVVQsWLKC8hY9JffnypZ2d3bx580aPHj1y5Mht27Y9fvy4A/FfvXpVV1enmPsAIeTv719VVVVaWpqXl1dTU6O410NZaWnp8uXLP/rooy5dujg6Ot69e1f5RsYO1IW/7NWrl+Ite3v7hoYGoVDYgU4ZL0gwfcNvRrp06VKr/+qGDh2KEPr+++8zMzNHjhx58+bN/v37x8TEvGt8DMOQqtuTKBSKurcQQgKB4NGjR7t3775x48Y///zj7+8vkUi0qQtfoNFord7S5gH2xggSTN+6detmbW1NcMLdy8srPDz80qVLq1evTkhIwAuZTKa6ezRawc8opKWlKUrS0tJsbW0dHR3xqv/4449WH6murr5///7GjRsDAgL4fL69vb3ysxcIqiaoS5OmfgjgNL2+0en0zZs3r1ixgsfjTZs2jcViPXv27NSpU8eOHXv+/PmRI0c+//zzrl27lpeXX7t2TXFPVLdu3VJTU589e2ZnZ8fhcPA7EVWiUCjr1q375ptv+Hz+sGHDrl69GhcXFx0djRCi0WgbN25cvXq1ra3t+PHjMQy7du3ahAkTHBwc7OzsLl26FBAQIJPJ1q9fX1xcjN8HSVw1QV3gf/R+1Pchanua/sSJEwMHDmSz2Vwu18fHJzIyEsOw4uLicePGOTs7M5lMJyenuXPn4tNRYBhWUVExevRoS0tLpPFpevy2xban6RMTE/v27ctgMGxsbEaPHo2fpr9+/Xr//v0dHBzc3d3XrFkzefLkadOmqataw7omTZqkCIJh2J9//okQamho0MlXaixgND0AJIJjMABIBAkGAIkgwQAgESQYACSCBAOARJBgAJAIEgwAEkGCAUAiSDAASPT/ABLpcmOlBSegAAAAAElFTkSuQmCC" /><!-- --></p>
+<p>Looking at the results, we can see that the highest decoding
+accuracies are always obtained when training and testing the classifier
+at the same location. However, the results are well above chance when
+training the classifier at one location and testing the classifier at a
+different location, showing there is a large degree of position
+invariance in the Inferior Temporal Cortex.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

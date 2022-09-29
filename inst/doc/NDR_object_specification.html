@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>NeuroDecodeR object specification</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">NeuroDecodeR object specification</h1>
+
+
+
+<p><br></p>
+<p>The NeuroDecodeR (NDR) package is designed around five abstract
+object types which are:</p>
+<ol style="list-style-type: decimal">
+<li><p>Datasources (DS): Generate training and test splits of the
+data.</p></li>
+<li><p>Feature preprocessors (FP): Learn parameters on the training set
+and apply transformations to the training and test sets.</p></li>
+<li><p>Classifiers (CL): Learn the relationship between experimental
+conditions (i.e., “labels”) and neural data on a training set, and then
+predict experimental conditions neural data in a test set.</p></li>
+<li><p>Result metrics (RM): Aggregate results across validation splits
+and over resampled runs and compute and plot final decoding accuracy
+metrics.</p></li>
+<li><p>Cross-validators (CV): Take the DS, FP, CL and RM objects and run
+a cross-validation decoding procedure.</p></li>
+</ol>
+<p>By having a standard set of object types, one can easily use
+different instances of these five object types to do different types of
+analyses.</p>
+<p>For most common analyses, one can use instances of these different
+object types that come with the NDR. However, in some cases, one might
+want to extend the functionality of the NDR to gain additional insights.
+For example, one might want to try a different classifier to gain a
+better understanding of how populations of neurons code information
+(e.g., see Meyers, Borzello, Freiwald and Tsao, J Neurosci 2015).</p>
+<p>The following document describes the methods and data formats that
+need to be implemented to create valid DS, FP, CL, RM, and CV object
+types. By creating new classes of objects that conform to these
+interfaces, one can easily extend the NDR to try new analyses.</p>
+<p><br></p>
+<p><br></p>
+<div id="datasources-ds" class="section level1">
+<h1>Datasources (DS)</h1>
+<p>Datasources are used to generate training and tests splits of
+data.</p>
+<div id="implementing-an-ds-methods-and-data-formats" class="section level3">
+<h3>Implementing an DS: methods and data formats</h3>
+<p>All datasources must implement a <code>get_data()</code> method that
+returns a data frame that has the following variables in it:</p>
+<ol style="list-style-type: decimal">
+<li><p><code>train_labels</code>: The label levels that occur on each
+trial in the training data set</p></li>
+<li><p><code>test_labels</code>: The label levels that occur on each
+trial in the test data set</p></li>
+<li><p><code>time_bin</code>: The time in the experiment where the
+<em>test</em> data comes from</p></li>
+<li><p><code>site_XXX</code>: A collection of variables that each has
+data from one site (e.g., neuron, EEG channel etc.)</p></li>
+<li><p><code>CV_XXX</code>: A list for each CV split whether a given row
+is in that train or test set</p></li>
+</ol>
+<p>Like all NDR objects, DS objects must also implement a
+<code>get_properties()</code> method which returns a data frame with one
+row that lists all the properties that have been set to allow for
+reproducible research.</p>
+</div>
+<div id="example-of-internals-of-ds-objects-using-the-ds_basic-object" class="section level3">
+<h3>Example of internals of DS objects using the ds_basic object</h3>
+<p>Here is an example the data returned by the <code>ds_basic()</code>
+datasource</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>data_file_name <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata/ZD_150bins_50sampled.Rda&quot;</span>, <span class="at">package=</span><span class="st">&quot;NeuroDecodeR&quot;</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>ds <span class="ot">&lt;-</span> <span class="fu">ds_basic</span>(data_file_name, <span class="st">&#39;stimulus_ID&#39;</span>, <span class="dv">18</span>)</span></code></pre></div>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>all_cv_data <span class="ot">&lt;-</span> <span class="fu">get_data</span>(ds)  </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(all_cv_data)</span></code></pre></div>
+<pre><code>##   [1] &quot;train_labels&quot; &quot;test_labels&quot;  &quot;time_bin&quot;     &quot;site_0001&quot;    &quot;site_0002&quot;   
+##   [6] &quot;site_0003&quot;    &quot;site_0004&quot;    &quot;site_0005&quot;    &quot;site_0006&quot;    &quot;site_0007&quot;   
+##  [11] &quot;site_0008&quot;    &quot;site_0009&quot;    &quot;site_0010&quot;    &quot;site_0011&quot;    &quot;site_0012&quot;   
+##  [16] &quot;site_0013&quot;    &quot;site_0014&quot;    &quot;site_0015&quot;    &quot;site_0016&quot;    &quot;site_0017&quot;   
+##  [21] &quot;site_0018&quot;    &quot;site_0019&quot;    &quot;site_0020&quot;    &quot;site_0021&quot;    &quot;site_0022&quot;   
+##  [26] &quot;site_0023&quot;    &quot;site_0024&quot;    &quot;site_0025&quot;    &quot;site_0026&quot;    &quot;site_0027&quot;   
+##  [31] &quot;site_0028&quot;    &quot;site_0029&quot;    &quot;site_0030&quot;    &quot;site_0031&quot;    &quot;site_0032&quot;   
+##  [36] &quot;site_0033&quot;    &quot;site_0034&quot;    &quot;site_0035&quot;    &quot;site_0036&quot;    &quot;site_0037&quot;   
+##  [41] &quot;site_0038&quot;    &quot;site_0039&quot;    &quot;site_0040&quot;    &quot;site_0041&quot;    &quot;site_0042&quot;   
+##  [46] &quot;site_0043&quot;    &quot;site_0044&quot;    &quot;site_0045&quot;    &quot;site_0046&quot;    &quot;site_0047&quot;   
+##  [51] &quot;site_0048&quot;    &quot;site_0049&quot;    &quot;site_0050&quot;    &quot;site_0051&quot;    &quot;site_0052&quot;   
+##  [56] &quot;site_0053&quot;    &quot;site_0054&quot;    &quot;site_0055&quot;    &quot;site_0056&quot;    &quot;site_0057&quot;   
+##  [61] &quot;site_0058&quot;    &quot;site_0059&quot;    &quot;site_0060&quot;    &quot;site_0061&quot;    &quot;site_0062&quot;   
+##  [66] &quot;site_0063&quot;    &quot;site_0064&quot;    &quot;site_0065&quot;    &quot;site_0066&quot;    &quot;site_0067&quot;   
+##  [71] &quot;site_0068&quot;    &quot;site_0069&quot;    &quot;site_0070&quot;    &quot;site_0071&quot;    &quot;site_0072&quot;   
+##  [76] &quot;site_0073&quot;    &quot;site_0074&quot;    &quot;site_0075&quot;    &quot;site_0076&quot;    &quot;site_0077&quot;   
+##  [81] &quot;site_0078&quot;    &quot;site_0079&quot;    &quot;site_0080&quot;    &quot;site_0081&quot;    &quot;site_0082&quot;   
+##  [86] &quot;site_0083&quot;    &quot;site_0084&quot;    &quot;site_0085&quot;    &quot;site_0086&quot;    &quot;site_0087&quot;   
+##  [91] &quot;site_0088&quot;    &quot;site_0089&quot;    &quot;site_0090&quot;    &quot;site_0091&quot;    &quot;site_0092&quot;   
+##  [96] &quot;site_0093&quot;    &quot;site_0094&quot;    &quot;site_0095&quot;    &quot;site_0096&quot;    &quot;site_0097&quot;   
+## [101] &quot;site_0098&quot;    &quot;site_0099&quot;    &quot;site_0100&quot;    &quot;site_0101&quot;    &quot;site_0102&quot;   
+## [106] &quot;site_0103&quot;    &quot;site_0104&quot;    &quot;site_0105&quot;    &quot;site_0106&quot;    &quot;site_0107&quot;   
+## [111] &quot;site_0108&quot;    &quot;site_0109&quot;    &quot;site_0110&quot;    &quot;site_0111&quot;    &quot;site_0112&quot;   
+## [116] &quot;site_0113&quot;    &quot;site_0114&quot;    &quot;site_0115&quot;    &quot;site_0116&quot;    &quot;site_0117&quot;   
+## [121] &quot;site_0118&quot;    &quot;site_0119&quot;    &quot;site_0120&quot;    &quot;site_0121&quot;    &quot;site_0122&quot;   
+## [126] &quot;site_0123&quot;    &quot;site_0124&quot;    &quot;site_0125&quot;    &quot;site_0126&quot;    &quot;site_0127&quot;   
+## [131] &quot;site_0128&quot;    &quot;site_0129&quot;    &quot;site_0130&quot;    &quot;site_0131&quot;    &quot;site_0132&quot;   
+## [136] &quot;CV_1&quot;         &quot;CV_2&quot;         &quot;CV_3&quot;         &quot;CV_4&quot;         &quot;CV_5&quot;        
+## [141] &quot;CV_6&quot;         &quot;CV_7&quot;         &quot;CV_8&quot;         &quot;CV_9&quot;         &quot;CV_10&quot;       
+## [146] &quot;CV_11&quot;        &quot;CV_12&quot;        &quot;CV_13&quot;        &quot;CV_14&quot;        &quot;CV_15&quot;       
+## [151] &quot;CV_16&quot;        &quot;CV_17&quot;        &quot;CV_18&quot;</code></pre>
+<p><br></p>
+<p><br></p>
+</div>
+</div>
+<div id="feature-preprocessors-fp" class="section level1">
+<h1>Feature preprocessors (FP)</h1>
+<p>Feature preprocessors learn a set of parameters from the training
+data and modify both the training and the test data based on these
+parameters, prior to the data being sent to the classifier. The features
+preprocessor objects must only use the training data to learn the
+preprocessing parameters in order to prevent contamination between the
+training and test data which could bias the results.</p>
+<div id="implementing-an-fp-required-methods-and-data-formats" class="section level3">
+<h3>Implementing an FP: required methods and data formats</h3>
+<p>All feature preprocessors must implement
+<code>preprocess_data()</code>. This method takes two data frames called
+<em>training_set</em> and <em>test_set</em> have the following
+variables:</p>
+<div id="training_set" class="section level4">
+<h4>training_set</h4>
+<ol style="list-style-type: decimal">
+<li><code>training_labels</code>: The labels used to train the
+classifier.</li>
+<li><code>site_X</code>: a group of variables that has data from
+multiple sites.</li>
+</ol>
+</div>
+<div id="test_set" class="section level4">
+<h4>test_set</h4>
+<ol style="list-style-type: decimal">
+<li><code>test_labels</code>: The labels used to test the
+classifier</li>
+<li><code>site_X</code>: a group of variables that has data from
+multiple sites</li>
+<li><code>time_bin</code>: character strings listing which times
+different rows correspond to</li>
+</ol>
+<p>The <code>preprocess_data()</code> returns a list with the two data
+frames <em>training_set</em> and <em>test_set</em> but the data in these
+data frames has been preprocessed based on parameters learned from the
+training_set.</p>
+<p>Like all NDR objects, FP objects must also implement a
+<code>get_properties()</code> method which returns a data frame with one
+row that lists all the properties that have been set to allow for
+reproducible research.</p>
+</div>
+</div>
+<div id="example-of-internals-of-fp-objects-using-the-fp_zscore" class="section level3">
+<h3>Example of internals of FP objects using the fp_zscore</h3>
+<p>If you want to implement a new FP object yourself, below is an
+example of how the FP object gets and returns data.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a ds_basic to get the data</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>data_file_name <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata/ZD_150bins_50sampled.Rda&quot;</span>, <span class="at">package=</span><span class="st">&quot;NeuroDecodeR&quot;</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>ds <span class="ot">&lt;-</span> <span class="fu">ds_basic</span>(data_file_name, <span class="st">&#39;stimulus_ID&#39;</span>, <span class="dv">18</span>)</span></code></pre></div>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cv_data <span class="ot">&lt;-</span> <span class="fu">get_data</span>(ds)  </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># an example of spliting the data into a training and test set, </span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># this is done in the cross-validator</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>training_set <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(cv_data, </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                              time_bin <span class="sc">==</span> <span class="st">&quot;time.100_250&quot;</span>, </span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                              CV_1 <span class="sc">==</span> <span class="st">&quot;train&quot;</span>) <span class="sc">%&gt;%</span>       <span class="co"># get data from the first CV split</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;site&quot;</span>), train_labels)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>test_set <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(cv_data, CV_1 <span class="sc">==</span> <span class="st">&quot;test&quot;</span>) <span class="sc">%&gt;%</span>   <span class="co"># get data from the first CV split</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;site&quot;</span>), test_labels, time_bin) </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co"># use the fp object to normalize the data </span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>fp <span class="ot">&lt;-</span> <span class="fu">fp_zscore</span>()</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>processed_data <span class="ot">&lt;-</span> <span class="fu">preprocess_data</span>(fp, training_set, test_set)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="co"># prior to z-score normalizing the mean (e.g. for site 1) is not 0</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(training_set<span class="sc">$</span>site_0001)</span></code></pre></div>
+<pre><code>## [1] 0.003137255</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># after normalizing the data the mean is pretty much 0</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(processed_data<span class="sc">$</span>training_set<span class="sc">$</span>site_0001)</span></code></pre></div>
+<pre><code>## [1] -5.768502e-17</code></pre>
+<p><br></p>
+<p><br></p>
+</div>
+</div>
+<div id="classifiers-cl" class="section level1">
+<h1>Classifiers (CL)</h1>
+<p>Classifiers take a set of training data and training labels, and
+learn a model of the relationship between the training data and the
+labels from the different classes. Once this model has been learned
+(i.e., once the classifier has been trained), the classifier is then
+used to make predictions about what labels were present in a new set of
+test data.</p>
+<div id="implementing-a-cl-required-methods-and-data-formats" class="section level3">
+<h3>Implementing a CL: required methods and data formats</h3>
+<p>Objects that are classifiers must implement the
+<code>get_predictions()</code> method. This method takes two data frames
+called <em>training_set</em> and <em>test_set</em> have the following
+variables:</p>
+<div id="training_set-1" class="section level4">
+<h4>training_set</h4>
+<ol style="list-style-type: decimal">
+<li><code>training_labels</code>: The labels used to train the
+classifier.</li>
+<li><code>site_X</code>: a group of variables that has data from
+multiple sites.</li>
+</ol>
+</div>
+<div id="test_set-1" class="section level4">
+<h4>test_set</h4>
+<ol style="list-style-type: decimal">
+<li><code>test_labels</code> The labels used to test the
+classifier.</li>
+<li><code>site_X</code>: a group of variables that has data from
+multiple sites.</li>
+<li><code>time_bin</code>: character strings listing which times
+different rows correspond to.</li>
+</ol>
+<p>The <code>get_predictions()</code> returns a data frame that has the
+following variables:</p>
+<ol style="list-style-type: decimal">
+<li><p><code>test_time</code>: a character vector indicating the times
+which the rows come from</p></li>
+<li><p><code>actual_labels</code>: the labels that were actually present
+on each trial</p></li>
+<li><p><code>predicted_labels</code>: the labels that the classifier
+predicted</p></li>
+<li><p><code>decision_vals.X</code> (optional): a group of variables
+that has values that indicate how strongly the classifier rates a test
+point as coming from a particular class</p></li>
+</ol>
+<p>Like all NDR objects, CL objects must also implement a
+<code>get_properties()</code> method which returns a data frame with one
+row that lists all the properties that have been set to allow for
+reproducible research.</p>
+</div>
+</div>
+<div id="example-of-internals-of-cl-object-using-the-cl_max_correlation" class="section level3">
+<h3>Example of internals of CL object using the cl_max_correlation</h3>
+<p>If you want to implement a new CL object yourself, below is an
+example of how the CL object gets and returns data.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a ds_basic to get the data</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>data_file_name <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata/ZD_150bins_50sampled.Rda&quot;</span>, <span class="at">package=</span><span class="st">&quot;NeuroDecodeR&quot;</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>ds <span class="ot">&lt;-</span> <span class="fu">ds_basic</span>(data_file_name, <span class="st">&#39;stimulus_ID&#39;</span>, <span class="dv">18</span>)</span></code></pre></div>
+<pre><code>## Automatically selecting sites_IDs_to_use. Since num_cv_splits = 18 and num_label_repeats_per_cv_split = 1, all sites that have 18 repetitions have been selected. This yields 132 sites that will be used for decoding (out of 132 total).</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cv_data <span class="ot">&lt;-</span> <span class="fu">get_data</span>(ds)  </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># an example of spliting the data into a training and test set, </span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># this is done in the cross-validator</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>training_set <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(cv_data, </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                              time_bin <span class="sc">==</span> <span class="st">&quot;time.100_250&quot;</span>, </span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                              CV_1 <span class="sc">==</span> <span class="st">&quot;train&quot;</span>) <span class="sc">%&gt;%</span>       <span class="co"># get data from the first CV split</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;site&quot;</span>), train_labels)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>test_set <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(cv_data, CV_1 <span class="sc">==</span> <span class="st">&quot;test&quot;</span>) <span class="sc">%&gt;%</span>   <span class="co"># get data from the first CV split</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">starts_with</span>(<span class="st">&quot;site&quot;</span>), test_labels, time_bin) </span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="co"># use the cl object to make predictions </span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> <span class="fu">cl_max_correlation</span>()</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">get_predictions</span>(cl, training_set, test_set)</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(predictions)</span></code></pre></div>
+<pre><code>##  [1] &quot;test_time&quot;            &quot;actual_labels&quot;        &quot;predicted_labels&quot;    
+##  [4] &quot;decision_vals.car&quot;    &quot;decision_vals.couch&quot;  &quot;decision_vals.face&quot;  
+##  [7] &quot;decision_vals.flower&quot; &quot;decision_vals.guitar&quot; &quot;decision_vals.hand&quot;  
+## [10] &quot;decision_vals.kiwi&quot;</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># see how accurate the predictions are (chance is 1/7)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>predictions_at_100ms <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(predictions, test_time <span class="sc">==</span> <span class="st">&quot;time.100_250&quot;</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(predictions_at_100ms<span class="sc">$</span>actual_labels <span class="sc">==</span> predictions_at_100ms<span class="sc">$</span>predicted_labels)</span></code></pre></div>
+<pre><code>## [1] 0.8571429</code></pre>
+<p><br></p>
+<p><br></p>
+</div>
+</div>
+<div id="result-metrics-rm" class="section level1">
+<h1>Result metrics (RM)</h1>
+<p>Result metrics take the predictions made by a classifier and
+aggregate the results so that they can be interpreted.</p>
+<div id="implementing-an-rm-required-methods-and-data-formats" class="section level3">
+<h3>Implementing an RM: required methods and data formats</h3>
+<p>To create a result metric two methods must be implemented
+<code>aggregate_CV_split_results()</code> which aggregates the results
+after a set of cross-validation sweeps have been completed and
+<code>aggregate_resample_run_results()</code> which aggregates the final
+results across all the resample runs.</p>
+<div id="aggregate_cv_split_results-method" class="section level4">
+<h4>aggregate_CV_split_results() method</h4>
+<p>The <code>aggregate_CV_split_results()</code> method takes a data
+frame that is a concatenation of the prediction data frames made by the
+classifier (CL) objects across all times and cross-validation splits in
+one resample run. Thus the input data frame to the
+<code>aggregate_CV_split_results()</code> method has similar variables
+as in the output of the CL <code>get_predictions()</code> method,
+namely:</p>
+<ol style="list-style-type: decimal">
+<li><p><code>CV</code>: a number indicating which cross-validation split
+the current row comes from</p></li>
+<li><p><code>train_time</code>: the train time that the current row
+comes from.</p></li>
+<li><p><code>test_time</code>: the test time that the current row comes
+from.</p></li>
+<li><p><code>actual_labels</code>: the labels that were actually present
+on each trial.</p></li>
+<li><p><code>predicted_labels</code>: the labels that the classifier
+predicted.</p></li>
+<li><p><code>decision_vals.X</code> (optional): a group of variables
+that has values that indicate how strongly the classifier rates a test
+point as coming from a particular class</p></li>
+</ol>
+<p>The output of the <code>aggregate_CV_split_results</code> is a RM
+object of the same type that contains inherits from a data frame so that
+the results can be can be aggregated together (e.g., via rbind) across
+resample runs. The variables in the data frame can be anything that is
+useful to capture about the classification performance.</p>
+</div>
+<div id="aggregate_resample_run_results-method" class="section level4">
+<h4>aggregate_resample_run_results() method</h4>
+<p>The <code>aggregate_resample_run_results()</code> method takes result
+metric data frames that have been aggregated together (e.g., via rbind)
+across resample runs. Thus this input data frame as the same variables
+as the data frame returned by the
+<code>aggregate_CV_split_results()</code> along with one additional
+variable indicating which resample run each row comes from.</p>
+<p>The output of this method should be a RM object of the same type that
+is a data frame which most likely is of a smaller size.</p>
+<p>Like all NDR objects, RM objects must also implement a
+<code>get_properties()</code> method which returns a data frame with one
+row that lists all the properties that have been set to allow for
+reproducible research.</p>
+<p>RM objects can also have plot methods to allow the different
+aggregated results to be plotted</p>
+</div>
+</div>
+<div id="example-of-result-metrics" class="section level3">
+<h3>Example of result metrics</h3>
+<p>Examples of using result metrics can be seen by going through the <a href="introduction_tutorial.html">Introduction tutorial</a></p>
+<p><br></p>
+<p><br></p>
+</div>
+</div>
+<div id="cross-validators-cv" class="section level1">
+<h1>Cross-validators (CV)</h1>
+<p>Cross-validators take a classifier (CL), a datasource (DS) feature
+preprocessors (FP) objects, and result metric (RM) objects and they run
+a cross-validation decoding scheme by training and testing the
+classifier with data generated from the datasource object (and possibly
+fed through the feature pre-processing first).</p>
+<div id="implementing-a-cv-required-methods-and-data-formats" class="section level3">
+<h3>Implementing a CV: required methods and data formats</h3>
+<p>All cross-validators must implement <code>run_decoding()</code>
+method. This method does not take any additional arguments (apart from
+the cross-validator itself).</p>
+<p>The cross-validator returns a list <code>DECODING_RESULTS</code>
+which contains different RM objects that can be used to assess how
+accurately the classifier made predictions at different points in
+time.</p>
+<p>Like all NDR objects, CV objects must also implement a
+<code>get_properties()</code> method which returns a data frame with one
+row that lists all the properties that have been set and also pulls all
+properties from the other NDR objects (e.g., from the DS, FP, CL and RM
+objects) to allow for reproducible research.</p>
+</div>
+<div id="example-of-cross-validators" class="section level3">
+<h3>Example of cross-validators</h3>
+<p>Examples of using the <code>cv_standard</code> can be seen by going
+through the <a href="introduction_tutorial.html">Introduction
+tutorial</a></p>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

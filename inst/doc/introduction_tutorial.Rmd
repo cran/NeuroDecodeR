@@ -1,0 +1,496 @@
+---
+title: "Introductory tutorial"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introductory tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+  
+ 
+The following tutorial gives a basic introduction to the data formats used by
+NeuroDecodeR (NDR) and shows how to run a simple decoding analysis. The tutorial
+is based on a dataset collected by Ying Zhang in Bob Desimone’s lab at MIT (some
+of the code below uses just a small subset of this data, but a larger data set
+can be download from the NeuroDecodeR GitHub site).
+
+The NeuroDecodeR package is based on the MATLAB Neural Decoding Toolbox, which
+you can learn more about at [www.readout.info](http://www.readout.info).
+
+
+
+
+## Overview of the NDR
+
+Neural decoding is a process in which a pattern classifier learns the
+relationship between neural activity and experimental conditions using a
+*training set* of data. The reliability of the relationship between the neural
+activity and experimental conditions is evaluated by having the classifier
+predict what experimental conditions were present on a second *test set* of
+data.
+
+The NDR is built around 5 different object classes that allow users to apply
+neural decoding in a flexible and robust way. The four types of objects are:
+
+  1. **Datasources (DS)** which generate training and test
+  splits of the data.
+  
+  2. **Feature preprocessors (FP)** which apply preprocessing to the training and test splits.
+ 
+  3. **Classifiers (CL)** which learn the relationship between
+  experimental conditions and data on the training set, and then predict
+  experimental conditions on the test data.
+ 
+  4. **Result Metrics (RM)** which take the output predictions of a classifier
+  and summarize the prediction accuracy.
+
+  5. **Cross-validators (CV)** which take the DS, FP and CL objects and run a
+  cross-validation decoding procedure.
+
+The NDR comes with a few implementations of each of these objects, and defines
+interfaces that allow one to create new objects that extend the basic
+functionality of the five object classes. The following tutorial explains the
+data formats used by the Neural Decoding Toolbox and how to run a decoding
+experiment using the basic versions of the four object classes.
+ 
+ 
+ 
+ 
+### About the data used in this tutorial
+
+The data used in this tutorial was collected by Ying Zhang in Bob Desimone’s lab
+at MIT and was used in the supplemental figures in the paper [Object decoding
+with attention in inferior temporal cortex, PNAS,
+2011](https://pubmed.ncbi.nlm.nih.gov/21555594/). The data consists of single
+unit recordings from 132 neurons in inferior temporal cortex (IT). The
+recordings were made while a monkey viewed 7 different objects that were
+presented at three different locations (the monkey was also shown images that
+consisted of three objects shown simultaneously and performed an attention
+task; however, for the purposes of this tutorial, we are only going to analyze
+data from trials when single objects were shown). Each object was presented
+approximately 20 times at each of the three locations.
+
+To start, let us load some libraries we will use in this tutorial.
+
+```{r load_libraries, message=FALSE, warning=FALSE}
+
+library(NeuroDecodeR)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+```
+
+
+
+## Data formats
+
+In order to use the NDR, the neural data must be in a usable format. Typically,
+this involves putting the data in [raster format](data_formats.html) and then
+converting it to [binned format](data_formats.html) using the
+`create_binned_data()` function.
+
+
+### Raster format
+
+To run a decoding analysis using the NDR, you first need to have your data in a
+usable format. In this tutorial we will use data collected by [Ying Zhang in Bob
+Desimone’s lab at MIT](datasets.html). The directory
+extdata/Zhang_Desimone_7objects_raster_data_rda/ contains data in
+raster format. Each file in this directory contains data from one neuron. To
+start, let us load one of these files and examine its contents. 
+
+We can also use the `test_valid_raster_format()` method to verify that the data
+is in valid raster format. If you start analyzing your own data,
+`test_valid_raster_format()` can be a useful function to make sure you have your
+raster data in the correct format.
+
+
+```{r load_raster_file}
+
+raster_dir_name <- file.path(system.file("extdata", package = "NeuroDecodeR"),
+                             "Zhang_Desimone_7object_raster_data_small_rda")
+file_name <- "bp1001spk_01A_raster_data.rda"
+load(file.path(raster_dir_name, file_name))
+
+test_valid_raster_format(file.path(raster_dir_name, file_name))
+
+```
+
+
+Below, we visualize the spiking pattern for this one neuron by using the 
+raster data's `plot()` function. 
+
+
+```{r plot_raster_file}
+
+plot(raster_data)
+
+```
+
+
+Here, the x-axis represents time in milliseconds, and the y-axis represents
+different trials. Each black tick mark represents a point in time
+when a neuron emitted an action potential.
+
+
+
+
+### Binning the data
+
+The NDR decoding objects operate on data in binned-format. To convert
+data from raster-format to binned-format, we can use the function
+`create_binned_data()`, which calculates the average firing rate of neurons over
+specified intervals sampled with a specified frequency (i.e., a boxcar
+filter is used). `create_binned_data()` takes in four arguments:
+
+1. The name of the directory where the raster-format data is stored 
+2. The name (potentially including a directory path) that the binned data should be saved as
+3. A bin size that specifies how much time the firing rates should be calculated over
+4. A sampling interval that specifies how frequently to calculate these firing rates. 
+
+
+To calculate the average firing rates in 150 ms bins sampled every 50 ms, we can
+use the code below.
+
+
+(Note: in the code below we have set the optional argument `num_parallel_cores`
+to specify the number of parallel cores we would like to use. Using more cores
+will speed up the time it takes for this function to run. By default, half the
+cores on the computer will be used which could be a good setting for most
+computers. We have chosen 2 cores here since this is the maximum number of cores
+allowed for examples that are on CRAN.)
+
+
+```{r bin_data, eval = FALSE}
+
+library(NeuroDecodeR)
+
+save_dir_name <- tempdir()
+
+binned_file_name <- create_binned_data(raster_dir_name, file.path(save_dir_name, "ZD"), 
+                                       150, 50, num_parallel_cores = 2)
+
+```
+
+
+### Determining how many times each condition was repeated
+
+Before beginning the decoding analysis, it is useful to know how many times each
+experimental condition (e.g., stimulus) was presented to each site (e.g.,
+neuron). In particular, it is useful to know how many times the condition that
+has the fewest repetitions was presented. To do this, we will use the function
+`get_num_label_repetitions()` which uses data in binned-format and
+calculates how many trials each label level was presented.
+
+Below, we use the plot function on the results to
+see how many times the labels were repeated.
+
+
+```{r label_repetitions}
+
+binned_file_name <- system.file("extdata/ZD_150bins_50sampled.Rda", package="NeuroDecodeR")
+label_rep_info <- get_num_label_repetitions(binned_file_name, "stimulus_ID") 
+plot(label_rep_info)  
+
+```
+
+Here, we see there are 132 neurons which have 60 repetitions of all the labels,
+and 6 neurons where the flower label was only presented 59 times.
+Thus, if we want to use all the neurons in the decoding analysis, the maximum
+number of cross-validation splits we could use is 59. Alternatively, we
+could use 60 cross-validation splits along with the 125 neurons that have 60
+repetitions.
+
+
+
+## Performing a decoding analysis
+
+Performing a decoding analysis involves several steps:
+
+1. Creating a datasource (DS) object that generates training and test splits of
+the data.
+
+2. Optionally creating feature-preprocessor (FP) objects that learn parameters
+from the training data, and preprocess the training and test data.
+
+3. Creating a classifier (CL) object that learns the relationship between the
+training data and training labels, and then evaluates the strength of this
+relationship on the test data.
+
+4. Creating result metric (RM) objects that aggregate the predictions to create
+result summaries.
+
+5. Running a cross-validator object that using the datasource (DS), the
+feature-preprocessor (FP) and the classifier (CL) objects to do a
+cross-validation procedure that estimates the decoding accuracy.
+
+
+Below, we describe how to create and run these objects on the Zhang-Desimone
+dataset.
+
+
+
+
+### Creating a Datasource (DS)
+
+A datasource object is used by the cross-validator to generate training and test
+splits of the data. Below we create a `ds_basic()` object that takes binned-format
+data, name of the label variables to be decoded, and a scalar that specifies
+how many cross-validation splits to use. The default behavior of this datasource
+is to create test splits that have one example of each object in them and
+*num_cv_splits - 1* examples of each object in the training set.
+
+As calculated above, all 132 neurons have 59 repetitions of each stimulus, and
+125 neurons have 60 repetitions of each stimulus. Thus, we can use up to 59
+cross-validation splits using all neurons, or we could set the datasource to use
+only a subset of neurons and use 60 cross-validation splits. For the purpose of
+this tutorial, we will use all the neurons and only 20 cross-validation splits
+so the code runs a little faster. The `ds_basic()` datasource object also has
+many more properties that can be set, including specifying certain
+label levels or neurons to use.
+
+
+```{r datasource}
+
+binned_file_name <- system.file(file.path("extdata", "ZD_150bins_50sampled.Rda"),
+                                package="NeuroDecodeR")
+variable_to_decode <- "stimulus_ID"
+num_cv_splits <- 20
+  
+ds <- ds_basic(binned_file_name, variable_to_decode, num_cv_splits)
+  
+```
+
+
+
+
+
+### Creating a feature-preprocessor (FP)
+
+
+Feature preprocessors use the training set to learn particular parameters about
+the data, and then apply preprocessing to the training and test sets using
+these parameters. Below, we will create a `fp_zscore()` preprocessor that zscore
+normalizes the data so that each neuron’s activity has approximately zero mean
+and a standard deviation of 1 over all trials. This feature-preprocessor is
+useful so that neurons with high firing rates do not end up contributing more to
+the decoding results than neurons with lower firing rates when a
+`cl_max_correlation()` classifier is used.
+
+```{r feature_preprocessor}
+
+# note that the FP objects are stored in a list
+#  which allows multiple FP objects to be used in one analysis
+ 
+fps <- list(fp_zscore())
+
+```
+
+
+
+
+
+### Creating a classifier (CL)
+
+Classifiers take a *training set* of data and learn the relationship between the
+neural responses and the experimental conditions (label levels) that were
+present on particular trials. The classifier is then used to make predictions
+about what experimental conditions are present on trials from a different *test
+set* of neural data. Below, we create a `cl_max_correlation()` classifier which
+learns prototypes of each class k that consists of the mean of all training data
+from class k. The predicted class for a new test point x is the class that has
+the maximum correlation coefficient value between the x and each class
+prototype.
+
+
+```{r classifier}
+ 
+cl <- cl_max_correlation()
+
+```
+
+
+
+
+
+### Creating result metrics (RM)
+
+Result metrics take the predictions made by a classifier, as well as the ground
+truth (i.e., the actual label level values for what happened on each trial) and
+aggregate these predictions to give a measure of the classifier's performance.
+
+Below, we create two result metrics. The first result metric returns basic
+measures of decoding accuracy such as the proportion of predictions that were
+correct (zero-one-loss). The second result metric creates a confusion matrix
+showing the pattern of prediction mistakes that were made. Result metrics must
+also be put into a list so multiple result metrics can be used in an
+analysis.
+
+
+```{r result_metrics}
+ 
+rms <- list(rm_main_results(), rm_confusion_matrix())
+
+```
+
+
+
+
+
+### Creating a cross-validator (CV) 
+
+
+Cross-validator objects take a datasource, a classifier, result metrics and
+optionally feature-preprocessor objects, and run a decoding procedure by
+generating training and test data from the datasource, preprocessing this data
+with the feature-preprocessors, training and testing the classifier on the
+resulting data, and aggregating the results with the result metrics. This
+procedure is run in two nested loops. The inner ‘cross-validation’ loop runs a
+cross-validation procedure where the classifier is trained and tested on
+different divisions of the data. The outer, ‘resample’ loop generates new splits
+(and potentially pseudo-populations) of data, which are then run in a
+cross-validation procedure by the inner loop. The number of resample runs is
+a parameter for this analysis as well, which we have set to 2 to make the
+procedure run quicker, although in general more resample runs will yield
+smoother results (the default value is 50). 
+
+Below, we create a `cv_standard()` object to runs this decoding procedure.
+
+
+```{r cross_validator}
+ 
+cv <- cv_standard(datasource = ds, 
+                  classifier = cl, 
+                  feature_preprocessors = fps, 
+                  result_metrics = rms, 
+                  num_resample_runs = 2)
+
+```
+
+
+
+### Running the decoding analysis 
+
+To run the decoding procedure, we call the cross-validator’s run_cv_decoding
+method, and the results are stored in an object DECODING_RESULTS.
+
+```{r run_decoding}
+ 
+DECODING_RESULTS <- run_decoding(cv)
+
+```
+
+
+## Plotting the results
+
+The DECODING_RESULTS object created is a list that contains our result metrics, calculated
+by aggregating the results over all the cross-validation splits. We can now use
+the result metrics plot functions to visualize these aggregated results.
+
+
+### Plotting the main results
+
+The `rm_main_results()` plot function allows one to plot temporal cross decoding
+results, where we are training the classifier at one time and testing the
+classifier at a second time. This can be displayed by running the code below:
+
+
+```{r plot_tcd}
+
+plot(DECODING_RESULTS$rm_main_results)
+
+```
+
+
+We can also create simpler line plots by setting the `type = 'line'`.
+Additionally, we can plot all three types of results that that rm_main_results
+object saves using the `type = 'all'` argument. Below, we see the results by
+setting both these arguments.
+
+```{r plot_line}
+
+plot(DECODING_RESULTS$rm_main_results, results_to_show = 'all', type = 'line')
+
+```
+
+
+### Plotting confusion matrices
+
+We can also plot the confusion matrices aggregated from the rm_confusion_matrix
+object, which shows the pattern of classification mistakes at different points in
+time.
+
+```{r plot_confusion_matrix}
+
+plot(DECODING_RESULTS$rm_confusion_matrix)
+
+```
+
+
+The `rm_confusion_matrix()` object also has a function `plot_MI()` which calculates
+mutual information from the confusion matrix and plots this as a function of
+time or as a TCT plot.
+
+
+```{r plot_MI}
+
+plot(DECODING_RESULTS$rm_confusion_matrix, results_to_show = "mutual_information")
+
+```
+
+
+## Saving the results
+
+Finally, the NDR has a "log" function that helps you save and manage your results.
+Below, we show how to use the `log_save_results()` function which takes a
+`DECODING_RESULTS` object and the name of a directory. This function saves the
+results to the specified directory and logs the parameters used in the
+analysis so that they can later be retrieved. For more information, see the
+tutorial on saving and managing results.
+
+
+```{r save_results}
+
+results_dir_name <- file.path(tempdir(), "results", "")
+dir.create(results_dir_name)
+
+log_save_results(DECODING_RESULTS, results_dir_name)
+
+```
+
+
+
+## Running an analysis using the pipe (|>) operator
+
+It is also possible to run a decoding analysis by string together
+NDR objects using the pipe operator. One can do this with the 
+following steps:
+
+1. Start by piping data in binned format into a datasource.
+2. Pipe the datasource into a sequence that contains a classifier, 
+   and optionally feature preprocessors and result metrics.
+3. Pipe this sequence into a cross-validator and then call the `run_decoding()`
+   method.
+
+The code below gives and example of how this can be done. 
+
+```{r ndr_piping_example}
+
+basedir_file_name <- system.file(file.path("extdata", "ZD_500bins_500sampled.Rda"), 
+                                   package="NeuroDecodeR")
+  
+  DECODING_RESULTS <- basedir_file_name |>
+    ds_basic('stimulus_ID', 6, num_label_repeats_per_cv_split = 3) |>
+    cl_max_correlation() |>
+    fp_zscore() |>
+    rm_main_results() |>
+    rm_confusion_matrix() |>
+    cv_standard(num_resample_runs = 2) |>
+    run_decoding()
+  
+  plot(DECODING_RESULTS$rm_confusion_matrix)
+
+```
+
+
